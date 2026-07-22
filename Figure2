@@ -1,0 +1,23 @@
+font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 100)
+
+labeled = []
+for im, t in zip(ims, labels):
+    up = im.resize((im.width * 2, im.height * 2), Image.LANCZOS)
+    d = ImageDraw.Draw(up)
+    # 白色粗体+黑色描边：黑底灰底上都清晰，位置避开四角文字
+    d.text((150, 226), t, font=font, fill=(255, 255, 255),
+           stroke_width=5, stroke_fill=(0, 0, 0))
+    labeled.append(up)
+
+w, h = labeled[0].size
+gap = 30
+canvas = Image.new('RGB', (w * 2 + gap, h * 2 + gap), (255, 255, 255))
+for im, pos in zip(labeled, [(0, 0), (w + gap, 0), (0, h + gap), (w + gap, h + gap)]):
+    canvas.paste(im, pos)
+
+out_png = '/mnt/agents/output/图2_拼图_2x2_ABCD.png'
+out_tif = '/mnt/agents/output/图2_拼图_2x2_ABCD.tif'
+canvas.save(out_png, dpi=(300, 300))
+canvas.save(out_tif, dpi=(300, 300), compression='tiff_lzw')
+import os
+print(canvas.size, f"{os.path.getsize(out_png)/1e6:.1f} MB PNG;", f"{os.path.getsize(out_tif)/1e6:.1f} MB TIFF")
