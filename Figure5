@@ -1,0 +1,27 @@
+paths = [f'/mnt/agents/upload/5{x}.jpg' for x in 'ABCD']
+labels = list('ABCD')
+imgs = [Image.open(p).convert('RGB') for p in paths]
+
+font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 150)
+
+def add_label(im, text):
+    im = im.copy()
+    d = ImageDraw.Draw(im)
+    d.rectangle([0, 0, 210, 210], fill=(255, 255, 255))  # 白底衬
+    d.text((32, 16), text, font=font, fill=(0, 0, 0))
+    return im
+
+labeled = [add_label(im, t) for im, t in zip(imgs, labels)]
+
+w, h = labeled[0].size
+gap = 40
+canvas = Image.new('RGB', (w * 2 + gap, h * 2 + gap), (255, 255, 255))
+for im, pos in zip(labeled, [(0, 0), (w + gap, 0), (0, h + gap), (w + gap, h + gap)]):
+    canvas.paste(im, pos)
+
+out_png = '/mnt/agents/output/图5_拼图_2x2_ABCD_高清.png'
+out_tif = '/mnt/agents/output/图5_拼图_2x2_ABCD_高清.tif'
+canvas.save(out_png, dpi=(300, 300))
+canvas.save(out_tif, dpi=(300, 300), compression='tiff_lzw')
+import os
+print(canvas.size, os.path.getsize(out_png)/1e6, 'MB PNG;', os.path.getsize(out_tif)/1e6, 'MB TIFF')
