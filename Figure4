@@ -1,0 +1,33 @@
+paths = [f'/mnt/agents/upload/Figure4{x}.jpg' for x in 'ABCD']
+labels = list('ABCD')
+
+W = 2000
+imgs = []
+for p in paths:
+    im = Image.open(p).convert('RGB')
+    h = round(im.height * W / im.width)
+    imgs.append(im.resize((W, h), Image.LANCZOS))
+
+font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 96)
+
+def add_label(im, text):
+    im = im.copy()
+    d = ImageDraw.Draw(im)
+    m = 24  # 距边距
+    d.rectangle([m, m, m + 150, m + 150], fill=(255, 255, 255))
+    d.text((m + 33, m + 22), text, font=font, fill=(0, 0, 0))
+    return im
+
+labeled = [add_label(im, t) for im, t in zip(imgs, labels)]
+
+w, h = labeled[0].size
+gap = 30
+canvas = Image.new('RGB', (w * 2 + gap, h * 2 + gap), (255, 255, 255))
+for im, pos in zip(labeled, [(0, 0), (w + gap, 0), (0, h + gap), (w + gap, h + gap)]):
+    canvas.paste(im, pos)
+
+out_png = '/mnt/agents/output/图4_拼图_2x2_ABCD.png'
+out_tif = '/mnt/agents/output/图4_拼图_2x2_ABCD.tif'
+canvas.save(out_png, dpi=(300, 300))
+canvas.save(out_tif, dpi=(300, 300), compression='tiff_lzw')
+print(canvas.size, f"{os.path.getsize(out_png)/1e6:.1f} MB PNG;", f"{os.path.getsize(out_tif)/1e6:.1f} MB TIFF")
