@@ -1,0 +1,35 @@
+paths = [f'/mnt/agents/upload/Figure3{x}.png' for x in 'ABCD']
+labels = list('ABCD')
+
+H = 1200  # 统一高度（约2.5倍放大，满足排版宽度）
+imgs = []
+for p in paths:
+    im = Image.open(p).convert('RGB')
+    w = round(im.width * H / im.height)
+    imgs.append(im.resize((w, H), Image.LANCZOS))
+
+font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf', 72)
+
+def add_label(im, text):
+    im = im.copy()
+    d = ImageDraw.Draw(im)
+    # 黑色MRI背景上直接用白色粗体字，不加衬底更干净
+    d.text((18, 8), text, font=font, fill=(255, 255, 255))
+    return im
+
+labeled = [add_label(im, t) for im, t in zip(imgs, labels)]
+
+gap = 30
+total_w = sum(im.width for im in labeled) + gap * 3
+canvas = Image.new('RGB', (total_w, H), (255, 255, 255))
+x = 0
+for im in labeled:
+    canvas.paste(im, (x, 0))
+    x += im.width + gap
+
+out_png = '/mnt/agents/output/图3_拼图_横排ABCD.png'
+out_tif = '/mnt/agents/output/图3_拼图_横排ABCD.tif'
+canvas.save(out_png, dpi=(300, 300))
+canvas.save(out_tif, dpi=(300, 300), compression='tiff_lzw')
+import os
+print(canvas.size, f"{os.path.getsize(out_png)/1e6:.1f} MB PNG;", f"{os.path.getsize(out_tif)/1e6:.1f} MB TIFF")
